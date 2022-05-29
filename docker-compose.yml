@@ -1,0 +1,109 @@
+version: "3.8"
+services:
+  # posgres container with multiple databases
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./pg-init-scripts:/docker-entrypoint-initdb.d # script for multiple databases
+      - /var/lib/postgresql/data # save to volume
+      
+    environment:
+      POSTGRES_USER: secureUser1
+      POSTGRES_PASSWORD: TotalySecurePass1
+      POSTGRES_MULTIPLE_DATABASES: DB_User, DB_Movies
+    ports:
+      - 5433:5432 # remap for conflict with local postgr service
+    networks:
+      - vpcbr # internel network
+
+  # login/register microservice
+  login:
+    build:
+      context: ./login
+      dockerfile: Dockerfile
+  #  image: microservices:latest
+    ports:
+      - 8001:8001
+    volumes:
+      - ./login:/app
+    depends_on:
+      - db  
+    networks:
+      - vpcbr
+
+  # friend microservice
+  friend:
+    build:
+      context: ./friend
+      dockerfile: Dockerfile
+  #  image: microservices:latest
+    ports:
+      - 8002:8002
+    volumes:
+      - ./friend:/app
+    depends_on:
+      - db
+    networks:
+      - vpcbr
+
+  # group microservice
+  group:
+    build:
+      context: ./group
+      dockerfile: Dockerfile
+  #  image: microservices:latest
+    ports:
+      - 8003:8003
+    volumes:
+      - ./group:/app
+    depends_on:
+      - db
+    networks:
+      - vpcbr
+
+  # search microservice
+  search:
+    build:
+      context: ./search
+      dockerfile: Dockerfile
+  #  image: microservices:latest
+    ports:
+      - 8004:8004
+    volumes:
+      - ./search:/app
+    depends_on:
+      - db
+    networks:
+      - vpcbr
+
+  # frontend of the website
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 8081:5000 # accessible on port 8081 on host
+    links: # link with all the microservices
+      - login
+      - friend
+      - group
+      - search
+    networks:
+      - vpcbr
+# internal networking
+networks:
+  vpcbr: # name
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+          aux_addresses: # bridge all the services
+            postgres: 10.5.0.5
+            login: 10.5.0.6
+            frontend: 10.5.0.7
+            friend: 10.5.0.8
+            group: 10.5.0.9
+            search: 10.5.0.10
+      
