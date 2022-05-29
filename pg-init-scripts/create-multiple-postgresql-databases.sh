@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# https://dev.to/bgord/multiple-postgres-databases-in-a-single-docker-container-417l?fbclid=IwAR2w-TF9c7tfQFPfq3RQh19YmRBFmde_a__pKGRcbZQBOUHPlh1fJhHDwVY
 set -e
 set -u
 
