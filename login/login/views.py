@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ViewSet):
         """
         # check if username an password are in the table
         if User.objects.filter(username=request.data["username"], password=request.data["password"]).exists():
-            return Response({"response":True}, status=status.HTTP_201_CREATED)
+            return Response({"response":True}, status=status.HTTP_200_OK)
         return Response({"response":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
